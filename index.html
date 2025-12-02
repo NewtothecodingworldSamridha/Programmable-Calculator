@@ -76,6 +76,41 @@
             gap: 10px;
         }
 
+        .buttons.scientific {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 8px;
+            font-size: 14px;
+            background: #e1e8ed;
+            color: #333;
+            border: 2px solid transparent;
+        }
+
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #5568d3;
+        }
+
+        .btn-func {
+            background: #48bb78;
+            color: white;
+            font-size: 15px;
+        }
+
+        .btn-func:hover {
+            background: #38a169;
+        }
+
         button {
             padding: 15px;
             font-size: 18px;
@@ -203,32 +238,63 @@
         
         <div class="calc-grid">
             <div class="calc-section">
-                <h2>Standard Calculator</h2>
+                <h2>Scientific Calculator</h2>
+                <div class="mode-toggle">
+                    <button class="mode-btn active" id="radBtn" onclick="setMode('rad')">RAD</button>
+                    <button class="mode-btn" id="degBtn" onclick="setMode('deg')">DEG</button>
+                </div>
                 <div class="display" id="display">0</div>
-                <div class="buttons">
+                <div class="buttons scientific">
+                    <!-- Row 1: Clear and mode-specific functions -->
                     <button class="btn-clear" onclick="clearDisplay()">C</button>
+                    <button class="btn-op" onclick="backspace()">⌫</button>
                     <button class="btn-op" onclick="appendToDisplay('(')">(</button>
                     <button class="btn-op" onclick="appendToDisplay(')')">)</button>
-                    <button class="btn-op" onclick="appendToDisplay('/')">÷</button>
                     
+                    <!-- Row 2: Scientific functions -->
+                    <button class="btn-func" onclick="appendFunction('sin(')">sin</button>
+                    <button class="btn-func" onclick="appendFunction('cos(')">cos</button>
+                    <button class="btn-func" onclick="appendFunction('tan(')">tan</button>
+                    <button class="btn-func" onclick="appendFunction('sqrt(')">√</button>
+                    
+                    <!-- Row 3: More functions -->
+                    <button class="btn-func" onclick="appendFunction('log(')">log</button>
+                    <button class="btn-func" onclick="appendFunction('ln(')">ln</button>
+                    <button class="btn-func" onclick="appendFunction('exp(')">e^x</button>
+                    <button class="btn-func" onclick="appendToDisplay('**')">x^y</button>
+                    
+                    <!-- Row 4: Special functions -->
+                    <button class="btn-func" onclick="appendFunction('abs(')">|x|</button>
+                    <button class="btn-func" onclick="appendFunction('factorial(')">n!</button>
+                    <button class="btn-func" onclick="appendConstant('PI')">π</button>
+                    <button class="btn-func" onclick="appendConstant('E')">e</button>
+                    
+                    <!-- Row 5: Numbers and operators -->
                     <button class="btn-num" onclick="appendToDisplay('7')">7</button>
                     <button class="btn-num" onclick="appendToDisplay('8')">8</button>
                     <button class="btn-num" onclick="appendToDisplay('9')">9</button>
-                    <button class="btn-op" onclick="appendToDisplay('*')">×</button>
+                    <button class="btn-op" onclick="appendToDisplay('/')">÷</button>
                     
+                    <!-- Row 6 -->
                     <button class="btn-num" onclick="appendToDisplay('4')">4</button>
                     <button class="btn-num" onclick="appendToDisplay('5')">5</button>
                     <button class="btn-num" onclick="appendToDisplay('6')">6</button>
-                    <button class="btn-op" onclick="appendToDisplay('-')">−</button>
+                    <button class="btn-op" onclick="appendToDisplay('*')">×</button>
                     
+                    <!-- Row 7 -->
                     <button class="btn-num" onclick="appendToDisplay('1')">1</button>
                     <button class="btn-num" onclick="appendToDisplay('2')">2</button>
                     <button class="btn-num" onclick="appendToDisplay('3')">3</button>
-                    <button class="btn-op" onclick="appendToDisplay('+')">+</button>
+                    <button class="btn-op" onclick="appendToDisplay('-')">−</button>
                     
+                    <!-- Row 8 -->
                     <button class="btn-num" onclick="appendToDisplay('0')">0</button>
                     <button class="btn-num" onclick="appendToDisplay('.')">.</button>
-                    <button class="btn-equals" onclick="calculate()">=</button>
+                    <button class="btn-op" onclick="appendToDisplay('%')">%</button>
+                    <button class="btn-op" onclick="appendToDisplay('+')">+</button>
+                    
+                    <!-- Row 9: Equals -->
+                    <button class="btn-equals" style="grid-column: span 4;" onclick="calculate()">=</button>
                 </div>
             </div>
 
@@ -246,7 +312,8 @@ Example: x * 2 + 5"></textarea>
                     • Simple: <code>2 + 2</code><br>
                     • Variables: <code>x = 5; y = 10; x * y</code><br>
                     • Functions: <code>Math.sqrt(16) + Math.pow(2, 3)</code><br>
-                    • Loops: <code>let sum = 0; for(let i=1; i<=10; i++) sum += i; sum</code>
+                    • Loops: <code>let sum = 0; for(let i=1; i<=10; i++) sum += i; sum</code><br>
+                    • Trig: <code>Math.sin(Math.PI/6) * 2</code> (in radians)
                 </div>
             </div>
         </div>
@@ -255,12 +322,65 @@ Example: x * 2 + 5"></textarea>
     <script>
         let currentDisplay = '0';
         let storedVariables = {};
+        let angleMode = 'rad'; // 'rad' or 'deg'
+
+        function setMode(mode) {
+            angleMode = mode;
+            document.getElementById('radBtn').classList.toggle('active', mode === 'rad');
+            document.getElementById('degBtn').classList.toggle('active', mode === 'deg');
+        }
+
+        function toRadians(degrees) {
+            return degrees * (Math.PI / 180);
+        }
+
+        function toDegrees(radians) {
+            return radians * (180 / Math.PI);
+        }
+
+        function factorial(n) {
+            if (n < 0) return NaN;
+            if (n === 0 || n === 1) return 1;
+            let result = 1;
+            for (let i = 2; i <= n; i++) {
+                result *= i;
+            }
+            return result;
+        }
 
         function appendToDisplay(value) {
             if (currentDisplay === '0' && value !== '.') {
                 currentDisplay = value;
             } else {
                 currentDisplay += value;
+            }
+            document.getElementById('display').textContent = currentDisplay;
+        }
+
+        function appendFunction(func) {
+            if (currentDisplay === '0') {
+                currentDisplay = func;
+            } else {
+                currentDisplay += func;
+            }
+            document.getElementById('display').textContent = currentDisplay;
+        }
+
+        function appendConstant(constant) {
+            const value = constant === 'PI' ? 'Math.PI' : 'Math.E';
+            if (currentDisplay === '0') {
+                currentDisplay = value;
+            } else {
+                currentDisplay += value;
+            }
+            document.getElementById('display').textContent = currentDisplay;
+        }
+
+        function backspace() {
+            if (currentDisplay.length > 1) {
+                currentDisplay = currentDisplay.slice(0, -1);
+            } else {
+                currentDisplay = '0';
             }
             document.getElementById('display').textContent = currentDisplay;
         }
@@ -272,7 +392,35 @@ Example: x * 2 + 5"></textarea>
 
         function calculate() {
             try {
-                const result = eval(currentDisplay);
+                let expression = currentDisplay;
+                
+                // Handle trigonometric functions based on mode
+                if (angleMode === 'deg') {
+                    expression = expression.replace(/sin\(/g, 'Math.sin(toRadians(');
+                    expression = expression.replace(/cos\(/g, 'Math.cos(toRadians(');
+                    expression = expression.replace(/tan\(/g, 'Math.tan(toRadians(');
+                    
+                    // Count parentheses to add closing ones for degree conversions
+                    const sinCount = (currentDisplay.match(/sin\(/g) || []).length;
+                    const cosCount = (currentDisplay.match(/cos\(/g) || []).length;
+                    const tanCount = (currentDisplay.match(/tan\(/g) || []).length;
+                    
+                    expression += ')'.repeat(sinCount + cosCount + tanCount);
+                } else {
+                    expression = expression.replace(/sin\(/g, 'Math.sin(');
+                    expression = expression.replace(/cos\(/g, 'Math.cos(');
+                    expression = expression.replace(/tan\(/g, 'Math.tan(');
+                }
+                
+                // Handle other functions
+                expression = expression.replace(/sqrt\(/g, 'Math.sqrt(');
+                expression = expression.replace(/log\(/g, 'Math.log10(');
+                expression = expression.replace(/ln\(/g, 'Math.log(');
+                expression = expression.replace(/exp\(/g, 'Math.exp(');
+                expression = expression.replace(/abs\(/g, 'Math.abs(');
+                expression = expression.replace(/factorial\(/g, 'factorial(');
+                
+                const result = eval(expression);
                 currentDisplay = result.toString();
                 document.getElementById('display').textContent = currentDisplay;
             } catch (error) {
@@ -350,4 +498,4 @@ Example: x * 2 + 5"></textarea>
         });
     </script>
 </body>
-</html>
+    </html>
